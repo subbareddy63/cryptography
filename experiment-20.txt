@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <string.h>
+
+const char key[] = "thisisakey123456";
+
+// ECB encryption function
+void ecb_encrypt(char *plaintext, char *ciphertext) {
+    int i;
+    for (i = 0; i < strlen(plaintext); i++) {
+        ciphertext[i] = plaintext[i] ^ key[i % strlen(key)];
+    }
+    ciphertext[i] = '\0';
+}
+
+void ecb_decrypt(char *ciphertext, char *plaintext) {
+    int i;
+    for (i = 0; i < strlen(ciphertext); i++) {
+        plaintext[i] = ciphertext[i] ^ key[i % strlen(key)];
+    }
+    plaintext[i] = '\0';
+}
+
+int main() {
+    char plaintext[100];
+    char ciphertext[100];
+
+  
+    printf("Enter plaintext: ");
+    scanf("%s", plaintext);
+
+  
+    ecb_encrypt(plaintext, ciphertext);
+    printf("Encrypted ciphertext: %s\n", ciphertext);
+
+ 
+    ecb_decrypt(ciphertext, plaintext);
+    printf("Decrypted plaintext: %s\n", plaintext);
+
+    return 0;
+}

@@ -1,0 +1,51 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <openssl/des.h>
+
+void generate_subkeys(const unsigned char *key, DES_cblock *subkeys) {
+    DES_key_schedule schedule;
+    DES_set_key_unchecked((const_DES_cblock *)key, &schedule);
+
+    // Extracting the first 24 bits from the initial key
+    unsigned char first_24_bits[3];
+    for (int i = 0; i < 3; i++)
+        first_24_bits[i] = key[i];
+
+    // Extracting the disjoint 24 bits from the initial key
+    unsigned char disjoint_24_bits[3];
+    for (int i = 0; i < 3; i++)
+        disjoint_24_bits[i] = key[i + 4];
+
+    // Generating the subkeys
+    for (int i = 0; i < 16; i++) {
+        // Using the first 24 bits
+        for (int j = 0; j < 3; j++)
+            subkeys[i][j] = first_24_bits[j];
+
+        // Using the disjoint 24 bits
+        for (int j = 0; j < 3; j++)
+            subkeys[i][j + 3] = disjoint_24_bits[j];
+
+        // Shifting both sets of bits
+        DES_key_schedule temp_schedule = schedule;
+        DES_key_sched(&temp_schedule, (i + 1), subkeys[i]);
+    }
+}
+
+int main() {
+    unsigned char key[8] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+    DES_cblock subkeys[16];
+
+    generate_subkeys(key, subkeys);
+
+    // Displaying the generated subkeys
+    printf("Generated Subkeys:\n");
+    for (int i = 0; i < 16; i++) {
+        printf("Subkey %d: ", i + 1);
+        for (int j = 0; j < 8; j++)
+            printf("%02X ", subkeys[i][j]);
+        printf("\n");
+    }
+
+    return 0;
+}

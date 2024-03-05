@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LEN 100
+
+// Function to perform Caesar cipher encryption
+void caesarEncrypt(char input[], int shift) {
+    for (int i = 0; input[i]; i++) {
+        if (isalpha(input[i])) {
+            char base = isupper(input[i]) ? 'A' : 'a';
+            input[i] = (input[i] - base + shift) % 26 + base;
+        }
+    }
+}
+
+int main() {
+    char input[MAX_LEN];
+    int shift;
+
+    printf("Enter a message to encrypt: ");
+    fgets(input, sizeof(input), stdin);
+    input[strlen(input) - 1] = '\0';
+
+    printf("Enter the shift value (1-25): ");
+    scanf("%d", &shift);
+
+    caesarEncrypt(input, shift);
+
+    printf("Encrypted message: %s\n", input);
+
+    return 0;
+}

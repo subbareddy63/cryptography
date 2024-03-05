@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_LENGTH 100
+
+void encrypt(char plaintext[], int keyStream[], int keyLength) {
+    int i, j;
+    int length = strlen(plaintext);
+
+    printf("Ciphertext: ");
+    for (i = 0; i < length; i++) {
+        char encryptedChar;
+        if (plaintext[i] >= 'a' && plaintext[i] <= 'z') {
+            encryptedChar = 'a' + (plaintext[i] - 'a' + keyStream[i % keyLength]) % 26;
+        } else if (plaintext[i] >= 'A' && plaintext[i] <= 'Z') {
+            encryptedChar = 'A' + (plaintext[i] - 'A' + keyStream[i % keyLength]) % 26;
+        } else {
+            encryptedChar = plaintext[i];
+        }
+        printf("%c", encryptedChar);
+    }
+    printf("\n");
+}
+
+int main() {
+    char plaintext[] = "send more money";
+    int keyStream[] = {9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9};
+    int keyLength = sizeof(keyStream) / sizeof(keyStream[0]);
+    
+    encrypt(plaintext, keyStream, keyLength);
+
+    return 0;
+}

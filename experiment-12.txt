@@ -1,0 +1,41 @@
+#include <stdio.h>
+
+#define SIZE 2
+
+void encrypt(char plaintext[], int key[SIZE][SIZE], int length) {
+    int i, j, k;
+    int matrix[SIZE][1]; 
+    int encrypted[SIZE][1];
+
+    
+    for (i = 0; i < length; i += SIZE) {
+        for (j = 0; j < SIZE; j++) {
+            matrix[j][0] = plaintext[i + j] - 'a';
+        }
+
+        for (j = 0; j < SIZE; j++) {
+            encrypted[j][0] = 0;
+            for (k = 0; k < SIZE; k++) {
+                encrypted[j][0] += key[j][k] * matrix[k][0];
+            }
+            encrypted[j][0] %= 26; 
+        }
+
+        for (j = 0; j < SIZE; j++) {
+            printf("%c", 'a' + encrypted[j][0]); 
+        }
+    }
+}
+
+int main() {
+    char plaintext[] = "hello";
+    int key[SIZE][SIZE] = {{9, 4}, {5, 7}};
+    int length = sizeof(plaintext) - 1; 
+
+    printf("Encrypted message: ");
+    encrypt(plaintext, key, length);
+
+    printf("\n");
+
+    return 0;
+}

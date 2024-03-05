@@ -1,0 +1,141 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+// Function to remove spaces and duplicate letters from the keyword
+void prepareKey(char *key) {
+    int i, j, len;
+    char *ptr;
+
+    len = strlen(key);
+
+    // Convert the key to uppercase
+    for (i = 0; i < len; i++) {
+        key[i] = toupper(key[i]);
+    }
+
+    // Remove spaces from the key
+    for (i = 0; i < len; i++) {
+        if (key[i] == ' ') {
+            for (j = i; j < len; j++) {
+                key[j] = key[j + 1];
+            }
+            len--;
+        }
+    }
+
+    // Remove duplicate letters from the key
+    for (i = 0; i < len; i++) {
+        for (j = i + 1; j < len;) {
+            if (key[i] == key[j]) {
+                for (ptr = &key[j]; *ptr != '\0'; ptr++) {
+                    *ptr = *(ptr + 1);
+                }
+                len--;
+            } else {
+                j++;
+            }
+        }
+    }
+}
+
+// Function to generate the key table
+void generateKeyTable(char key[], char keyTable[SIZE][SIZE]) {
+    char alphabet[26] = "ABCDEFGHIKLMNOPQRSTUVWXYZ"; // Ignoring 'J'
+    int i, j, k = 0;
+    int len = strlen(key);
+
+    // Fill the key into keyTable
+    for (i = 0; i < len; i++) {
+        keyTable[k / SIZE][k % SIZE] = key[i];
+        k++;
+    }
+
+    // Fill the remaining elements of keyTable with remaining characters of alphabet
+    for (i = 0; i < 26; i++) {
+        int flag = 0;
+        for (j = 0; j < len; j++) {
+            if (key[j] == alphabet[i]) {
+                flag = 1;
+                break;
+            }
+        }
+        if (flag == 0) {
+            keyTable[k / SIZE][k % SIZE] = alphabet[i];
+            k++;
+        }
+    }
+}
+
+// Function to find the position of a character in keyTable
+void findPosition(char keyTable[SIZE][SIZE], char ch, int *row, int *col) {
+    int i, j;
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (keyTable[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+// Function to encrypt the plaintext
+void encrypt(char plaintext[], char keyTable[SIZE][SIZE]) {
+    int i, len;
+    char first, second;
+    int row1, row2, col1, col2;
+
+    len = strlen(plaintext);
+
+    // Ensure the plaintext has an even length
+    if (len % 2 != 0) {
+        plaintext[len] = 'X';
+        plaintext[len + 1] = '\0';
+        len++;
+    }
+
+    // Encrypt pairs of characters
+    for (i = 0; i < len; i += 2) {
+        first = plaintext[i];
+        second = plaintext[i + 1];
+
+        findPosition(keyTable, first, &row1, &col1);
+        findPosition(keyTable, second, &row2, &col2);
+
+        if (row1 == row2) {
+            printf("%c%c", keyTable[row1][(col1 + 1) % SIZE], keyTable[row2][(col2 + 1) % SIZE]);
+        } else if (col1 == col2) {
+            printf("%c%c", keyTable[(row1 + 1) % SIZE][col1], keyTable[(row2 + 1) % SIZE][col2]);
+        } else {
+            printf("%c%c", keyTable[row1][col2], keyTable[row2][col1]);
+        }
+    }
+}
+
+int main() {
+    char key[100];
+    char plaintext[100];
+    char keyTable[SIZE][SIZE];
+
+    printf("Enter the key: ");
+    fgets(key, sizeof(key), stdin);
+    key[strcspn(key, "\n")] = '\0';
+
+    printf("Enter the plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strcspn(plaintext, "\n")] = '\0';
+
+    prepareKey(key);
+    generateKeyTable(key, keyTable);
+
+    printf("Encrypted text: ");
+    encrypt(plaintext, keyTable);
+    printf("\n");
+
+    return 0;
+}

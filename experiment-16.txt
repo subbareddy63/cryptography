@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+#define NUM_TOP_PLAINTEXTS 10
+
+const double ENGLISH_FREQUENCY[ALPHABET_SIZE] = {
+    0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015, // A-G
+    0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749, // H-N
+    0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758, // O-U
+    0.00978, 0.02360, 0.00150, 0.01974, 0.00074                    // V-Z
+};
+
+void calculateFrequency(char *text, int *frequency) {
+    for (int i = 0; text[i] != '\0'; i++) {
+        if (isalpha(text[i])) {
+            frequency[toupper(text[i]) - 'A']++;
+        }
+    }
+}
+
+double scoreText(char *text) {
+    int frequency[ALPHABET_SIZE] = {0};
+    calculateFrequency(text, frequency);
+    double score = 0.0;
+    int totalLetters = 0;
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        totalLetters += frequency[i];
+    }
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        score += ((double)frequency[i] / totalLetters) * ENGLISH_FREQUENCY[i];
+    }
+    return score;
+}
+
+int main() {
+    char encryptedText[] = "Encrypted text goes here";
+    double scores[NUM_TOP_PLAINTEXTS];
+    char plaintexts[NUM_TOP_PLAINTEXTS][strlen(encryptedText) + 1];
+    
+
+    for (int shift = 0; shift < ALPHABET_SIZE; shift++) {
+        char key[ALPHABET_SIZE];
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            key[i] = 'A' + (i + shift) % ALPHABET_SIZE;
+        }
+        
+
+        char decryptedText[strlen(encryptedText) + 1];
+        for (int i = 0; encryptedText[i] != '\0'; i++) {
+            if (isalpha(encryptedText[i])) {
+                decryptedText[i] = islower(encryptedText[i]) ? tolower(key[toupper(encryptedText[i]) - 'A']) : key[toupper(encryptedText[i]) - 'A'];
+            } else {
+                decryptedText[i] = encryptedText[i];
+            }
+        }
+        decryptedText[strlen(encryptedText)] = '\0';
+
+        double currentScore = scoreText(decryptedText);
+
+
+        for (int i = 0; i < NUM_TOP_PLAINTEXTS; i++) {
+            if (currentScore > scores[i]) {
+                for (int j = NUM_TOP_PLAINTEXTS - 1; j > i; j--) {
+                    scores[j] = scores[j - 1];
+                    strcpy(plaintexts[j], plaintexts[j - 1]);
+                }
+                scores[i] = currentScore;
+                strcpy(plaintexts[i], decryptedText);
+                break;
+            }
+        }
+    }
+
+
+    printf("Top %d possible plaintexts:\n", NUM_TOP_PLAINTEXTS);
+    for (int i = 0; i < NUM_TOP_PLAINTEXTS; i++) {
+        printf("%d. %s\n", i + 1, plaintexts[i]);
+    }
+
+    return 0;
+}
+

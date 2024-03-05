@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+void findPosition(char matrix[SIZE][SIZE], char ch, int *row, int *col) {
+    int i, j;
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (matrix[i][j] == ch || (ch == 'I' && matrix[i][j] == 'J')) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+void encrypt(char plaintext[], char matrix[SIZE][SIZE]) {
+    int i, len;
+    char first, second;
+    int row1, row2, col1, col2;
+
+    len = strlen(plaintext);
+
+    printf("Encrypted text: ");
+    for (i = 0; i < len; i += 2) {
+        first = plaintext[i];
+        second = (i + 1 < len) ? plaintext[i + 1] : 'X'; // Pad 'X' if plaintext length is odd
+
+        findPosition(matrix, first, &row1, &col1);
+        findPosition(matrix, second, &row2, &col2);
+
+        if (row1 == row2) {
+            printf("%c%c ", matrix[row1][(col1 + 1) % SIZE], matrix[row2][(col2 + 1) % SIZE]);
+        } else if (col1 == col2) {
+            printf("%c%c ", matrix[(row1 + 1) % SIZE][col1], matrix[(row2 + 1) % SIZE][col2]);
+        } else {
+            printf("%c%c ", matrix[row1][col2], matrix[row2][col1]);
+        }
+    }
+    printf("\n");
+}
+
+int main() {
+    char matrix[SIZE][SIZE] = {
+        {'M', 'F', 'H', 'I', 'K'},
+        {'U', 'N', 'O', 'P', 'Q'},
+        {'Z', 'V', 'W', 'X', 'Y'},
+        {'E', 'L', 'A', 'R', 'G'},
+        {'D', 'S', 'T', 'B', 'C'}
+    };
+
+    char plaintext[] = "Must see you over Cadogan West. Coming at once.";
+
+    encrypt(plaintext, matrix);
+
+    return 0;
+}

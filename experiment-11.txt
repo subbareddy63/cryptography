@@ -1,0 +1,17 @@
+#include <stdio.h>
+#include <stdint.h>
+
+int main() {
+    uint64_t factorial = 1;
+    uint64_t possibleKeys;
+
+    for (int i = 1; i <= 25; i++) {
+        factorial *= i;
+    }
+
+    possibleKeys = factorial * (1ULL << 25);
+
+    printf("Approximate number of possible keys: %llu\n", possibleKeys);
+
+    return 0;
+}

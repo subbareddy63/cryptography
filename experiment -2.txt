@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LEN 100
+
+void monoSubEncrypt(char input[], char substitution[]) {
+    for (int i = 0; input[i]; i++) {
+        if (isalpha(input[i])) {
+            input[i] = substitution[tolower(input[i]) - 'a'];
+        }
+    }
+}
+
+int main() {
+    char input[MAX_LEN];
+    char substitution[26];
+
+    printf("Enter a message to encrypt: ");
+    fgets(input, sizeof(input), stdin);
+    input[strlen(input) - 1] = '\0';
+
+    printf("Enter a substitution alphabet (26 lowercase characters): ");
+    scanf("%s", substitution);
+
+    monoSubEncrypt(input, substitution);
+
+    printf("Encrypted message: %s\n", input);
+
+    return 0;
+}
