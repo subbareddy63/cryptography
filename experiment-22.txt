@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <string.h>
+
+
+const int a = 3;
+const int b = 5;
+const int mod = 256;
+
+
+unsigned char affine_encrypt(unsigned char plaintext) {
+    return (a * plaintext + b) % mod;
+}
+
+
+unsigned char affine_decrypt(unsigned char ciphertext) {
+    int inverse_a = 137;
+    return (inverse_a * (ciphertext - b)) % mod;
+}
+
+
+void cbc_encrypt(unsigned char *plaintext, unsigned char *ciphertext, unsigned char *iv, int length) {
+    for (int i = 0; i < length; i++) {
+        if (i == 0) {
+            ciphertext[i] = plaintext[i] ^ iv[i];
+        } else {
+            ciphertext[i] = plaintext[i] ^ ciphertext[i - 1];
+        }
+        ciphertext[i] = affine_encrypt(ciphertext[i]);
+    }
+}
+
+
+void cbc_decrypt(unsigned char *ciphertext, unsigned char *plaintext, unsigned char *iv, int length) {
+    unsigned char temp[length];
+    for (int i = 0; i < length; i++) {
+        if (i == 0) {
+            temp[i] = ciphertext[i];
+        } else {
+            temp[i] = ciphertext[i] ^ ciphertext[i - 1];
+        }
+        plaintext[i] = affine_decrypt(temp[i]);
+    }
+    for (int i = 0; i < length; i++) {
+        if (i == 0) {
+            plaintext[i] = plaintext[i] ^ iv[i];
+        }
+    }
+}
+
+int main() {
+    unsigned char plaintext[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+    unsigned char ciphertext[16];
+    unsigned char iv[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a};
+
+    cbc_encrypt(plaintext, ciphertext, iv, 16);
+    printf("Encrypted ciphertext: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", ciphertext[i]);
+    }
+    printf("\n");
+
+    unsigned char decryptedtext[16];
+    cbc_decrypt(ciphertext, decryptedtext, iv, 16);
+    printf("Decrypted plaintext: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", decryptedtext[i]);
+    }
+    printf("\n");
+
+    return 0;
+}

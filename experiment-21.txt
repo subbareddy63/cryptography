@@ -1,0 +1,142 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8 // Assuming 8 bytes block size for demonstration purposes
+
+// Key for encryption/decryption
+const char key[] = "thisisakey123456";
+
+// ECB encryption function
+void ecb_encrypt(char *plaintext, char *ciphertext, int len) {
+    int i, j;
+    for (i = 0; i < len; i += BLOCK_SIZE) {
+        for (j = 0; j < BLOCK_SIZE; j++) {
+            ciphertext[i + j] = plaintext[i + j] ^ key[j % strlen(key)];
+        }
+    }
+}
+
+// ECB decryption function
+void ecb_decrypt(char *ciphertext, char *plaintext, int len) {
+    int i, j;
+    for (i = 0; i < len; i += BLOCK_SIZE) {
+        for (j = 0; j < BLOCK_SIZE; j++) {
+            plaintext[i + j] = ciphertext[i + j] ^ key[j % strlen(key)];
+        }
+    }
+}
+
+// CBC encryption function
+void cbc_encrypt(char *plaintext, char *ciphertext, int len, char *iv) {
+    char prev_block[BLOCK_SIZE];
+    memcpy(prev_block, iv, BLOCK_SIZE); // Initialization Vector (IV)
+
+    int i, j;
+    for (i = 0; i < len; i += BLOCK_SIZE) {
+        for (j = 0; j < BLOCK_SIZE; j++) {
+            ciphertext[i + j] = plaintext[i + j] ^ prev_block[j];
+        }
+        memcpy(prev_block, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+// CBC decryption function
+void cbc_decrypt(char *ciphertext, char *plaintext, int len, char *iv) {
+    char prev_block[BLOCK_SIZE];
+    memcpy(prev_block, iv, BLOCK_SIZE); // Initialization Vector (IV)
+
+    int i, j;
+    for (i = 0; i < len; i += BLOCK_SIZE) {
+        for (j = 0; j < BLOCK_SIZE; j++) {
+            plaintext[i + j] = ciphertext[i + j] ^ prev_block[j];
+        }
+        memcpy(prev_block, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+// CFB encryption function
+void cfb_encrypt(char *plaintext, char *ciphertext, int len, char *iv) {
+    char feedback[BLOCK_SIZE];
+    memcpy(feedback, iv, BLOCK_SIZE); // Initialization Vector (IV)
+
+    int i, j;
+    for (i = 0; i < len; i += BLOCK_SIZE) {
+        for (j = 0; j < BLOCK_SIZE; j++) {
+            ciphertext[i + j] = plaintext[i + j] ^ feedback[j];
+        }
+        memcpy(feedback, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+// CFB decryption function
+void cfb_decrypt(char *ciphertext, char *plaintext, int len, char *iv) {
+    char feedback[BLOCK_SIZE];
+    memcpy(feedback, iv, BLOCK_SIZE); // Initialization Vector (IV)
+
+    int i, j;
+    for (i = 0; i < len; i += BLOCK_SIZE) {
+        for (j = 0; j < BLOCK_SIZE; j++) {
+            plaintext[i + j] = ciphertext[i + j] ^ feedback[j];
+        }
+        memcpy(feedback, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+// Padding function
+void add_padding(char *text, int len) {
+    int padding_length = BLOCK_SIZE - (len % BLOCK_SIZE);
+    text[len] = 0x80; // Adding a 1 bit
+    for (int i = len + 1; i < len + padding_length; i++) {
+        text[i] = 0x00; // Adding zero bits
+    }
+}
+
+int main() {
+    char plaintext[1000]; // Assuming maximum length of plaintext
+    char iv[BLOCK_SIZE]; // Initialization Vector
+    char ciphertext[1000];
+    char decryptedtext[1000];
+
+    // Input plaintext
+    printf("Enter plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    int len = strlen(plaintext);
+    plaintext[len - 1] = '\0'; // Remove the newline character added by fgets
+    len = strlen(plaintext);
+
+    // Padding plaintext if needed
+    add_padding(plaintext, len);
+    len = strlen(plaintext);
+
+    // Generating IV
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        iv[i] = rand() % 256; // Generating random bytes for IV
+    }
+
+    // ECB encryption
+    ecb_encrypt(plaintext, ciphertext, len);
+    printf("ECB Encrypted ciphertext: %s\n", ciphertext);
+
+    // ECB decryption
+    ecb_decrypt(ciphertext, decryptedtext, len);
+    printf("ECB Decrypted plaintext: %s\n", decryptedtext);
+
+    // CBC encryption
+    cbc_encrypt(plaintext, ciphertext, len, iv);
+    printf("CBC Encrypted ciphertext: %s\n", ciphertext);
+
+    // CBC decryption
+    cbc_decrypt(ciphertext, decryptedtext, len, iv);
+    printf("CBC Decrypted plaintext: %s\n", decryptedtext);
+
+    // CFB encryption
+    cfb_encrypt(plaintext, ciphertext, len, iv);
+    printf("CFB Encrypted ciphertext: %s\n", ciphertext);
+
+    // CFB decryption
+    cfb_decrypt(ciphertext, decryptedtext, len, iv);
+    printf("CFB Decrypted plaintext: %s\n", decryptedtext);
+
+    return 0;
+}

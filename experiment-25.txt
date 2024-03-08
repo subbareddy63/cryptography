@@ -1,0 +1,38 @@
+#include <stdio.h>
+
+int gcd(int a, int b) {
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+
+int findFactor(int n) {
+    int i;
+    for (i = 2; i < n; i++) {
+        if (n % i == 0)
+            return i;
+    }
+    return -1; 
+}
+
+int main() {
+    int n = 187;
+    int e = 7; 
+
+
+    int plaintext_block_with_common_factor = 55;
+
+    int factor = findFactor(n);
+    if (factor == -1) {
+        printf("No common factor found with n\n");
+        return 1;
+    }
+
+    printf("Found common factor with n: %d\n", factor);
+
+    int other_factor = n / factor;
+
+    printf("Other prime factor: %d\n", other_factor);
+
+    return 0;
+}

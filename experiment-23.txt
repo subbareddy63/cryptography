@@ -1,0 +1,152 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int sbox0[4][4] = {
+    {1, 0, 3, 2},
+    {3, 2, 1, 0},
+    {0, 2, 1, 3},
+    {3, 1, 3, 2}
+};
+
+int sbox1[4][4] = {
+    {0, 1, 2, 3},
+    {2, 0, 1, 3},
+    {3, 0, 1, 0},
+    {2, 1, 0, 3}
+};
+
+void generate_keys(int key, int *k1, int *k2) {
+    int perm10[10] = {3, 5, 2, 7, 4, 10, 1, 9, 8, 6};
+    int perm8[8] = {6, 3, 7, 4, 8, 5, 10, 9};
+    int ls1[10] = {2, 3, 4, 5, 1, 7, 8, 9, 10, 6};
+    int ls2[10] = {3, 4, 5, 1, 2, 8, 9, 10, 6, 7};
+    
+    int p10_key = 0, p8_k1 = 0, p8_k2 = 0;
+    int i;
+    
+    for (i = 0; i < 10; i++) {
+        if (key & (1 << (10 - perm10[i])))
+            p10_key |= (1 << (9 - i));
+    }
+    
+    int lshift1 = ((p10_key << 1) & 0x3FF) | ((p10_key >> 9) & 0x01);
+    
+    for (i = 0; i < 8; i++) {
+        if (lshift1 & (1 << (10 - perm8[i])))
+            p8_k1 |= (1 << (7 - i));
+    }
+    
+    int lshift2 = ((lshift1 << 2) & 0x3FF) | ((lshift1 >> 8) & 0x03);
+ 
+    for (i = 0; i < 8; i++) {
+        if (lshift2 & (1 << (10 - perm8[i])))
+            p8_k2 |= (1 << (7 - i));
+    }
+    
+    *k1 = p8_k1;
+    *k2 = p8_k2;
+}
+
+int sbox_substitution(int input, int sbox[4][4]) {
+    int row = ((input & 0x08) >> 2) | (input & 0x01);
+    int col = (input & 0x06) >> 1;
+    return sbox[row][col];
+}
+
+
+int round_function(int input, int key) {
+    int expansion_permutation[8] = {4, 1, 2, 3, 2, 3, 4, 1};
+    int perm4[4] = {2, 4, 3, 1};
+    
+    int expansion = 0, output = 0;
+    int i;
+    
+    for (i = 0; i < 8; i++) {
+        if (input & (1 << (4 - expansion_permutation[i])))
+            expansion |= (1 << (7 - i));
+    }
+    
+    expansion ^= key;
+    
+    int sbox_output = sbox_substitution((expansion >> 4) & 0x0F, sbox0);
+    sbox_output <<= 2;
+    sbox_output |= sbox_substitution(expansion & 0x0F, sbox1);
+    
+    for (i = 0; i < 4; i++) {
+        if (sbox_output & (1 << (4 - perm4[i])))
+            output |= (1 << (3 - i));
+    }
+    
+    return output;
+}
+
+int sdes_encrypt(int plaintext, int key) {
+    int initial_permutation[8] = {2, 6, 3, 1, 4, 8, 5, 7};
+    int inverse_permutation[8] = {4, 1, 3, 5, 7, 2, 8, 6};
+    int k1, k2;
+    generate_keys(key, &k1, &k2);
+    int ip = 0, fk1 = 0, sw = 0, fk2 = 0, final = 0;
+    int i;
+    
+   
+    for (i = 0; i < 8; i++) {
+        if (plaintext & (1 << (8 - initial_permutation[i])))
+            ip |= (1 << (7 - i));
+    }
+    
+ 
+    fk1 = round_function(ip >> 4, k1);
+    fk1 <<= 4;
+    fk1 |= (ip & 0x0F);
+    sw = fk1 ^ (ip >> 4);
+    
+  
+    sw = ((sw << 4) & 0xF0) | ((sw >> 4) & 0x0F);
+ 
+    fk2 = round_function(sw >> 4, k2);
+    fk2 <<= 4;
+    fk2 |= (sw & 0x0F);
+    
+
+    for (i = 0; i < 8; i++) {
+        if (fk2 & (1 << (8 - inverse_permutation[i])))
+            final |= (1 << (7 - i));
+    }
+    
+    return final;
+}
+
+void ctr_encrypt(int *plaintext, int *ciphertext, int len, int key, int counter) {
+    int i;
+    for (i = 0; i < len; i++) {
+        ciphertext[i] = plaintext[i] ^ sdes_encrypt(counter++, key);
+    }
+}
+
+int main() {
+    int plaintext[3] = {1, 2, 4};
+    int key = 0x1F1D; 
+    int counter = 0; 
+    
+    int ciphertext[3];
+    int decryptedtext[3];
+    
+    ctr_encrypt(plaintext, ciphertext, 3, key, counter);
+    
+  
+    printf("Ciphertext: ");
+    for (int i = 0; i < 3; i++) {
+        printf("%d ", ciphertext[i]);
+    }
+    printf("\n");
+    
+    ctr_encrypt(ciphertext, decryptedtext, 3, key, counter);
+    
+    printf("Decrypted plaintext: ");
+    for (int i = 0; i < 3; i++) {
+        printf("%d ", decryptedtext[i]);
+    }
+    printf("\n");
+    
+    return 0;
+}
